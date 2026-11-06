@@ -3,7 +3,7 @@
 set -e
 export PATH=/workspace/wine-portable/current/bin:$PATH WINEPREFIX=/workspace/exwifi/.wine WINEDEBUG=-all
 cd /workspace/hangul-wood
-V=1.0.0
+V=1.0.1
 [ -f model/en_ko/model.bin ] || sh tools/get_model.sh
 rm -rf build "dist/HANGUL WOOD"
 wine 'C:\Python311\python.exe' -m PyInstaller --noconfirm "HANGUL WOOD.spec" > pyi.log 2>&1; echo PYI_DONE

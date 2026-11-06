@@ -1,4 +1,4 @@
-#define MyVer "1.0.0"
+#define MyVer "1.0.1"
 [Setup]
 AppId={{B174425E-0736-4E5E-B6DB-85B27CA049D1}
 AppName=HANGUL WOOD

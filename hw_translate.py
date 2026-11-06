@@ -1,12 +1,22 @@
 """HANGUL WOOD translation engine: English in, Hangul out.
 Offline: built-in English->Korean neural model (CTranslate2 + SentencePiece), always available.
 Online (optional, Auto mode): HTTPS translation for higher quality; falls back to the built-in model on any failure.
+Short phrases: built-in glossary first, then offline model; online MT only for longer / sentence-like input
+(so tiny ambiguous queries never hallucinate unrelated meanings).
 ©2026 EX Inc./HYPERION DIGITAL ©2026"""
 import json, os, re, ssl, sys, threading, time, urllib.parse, urllib.request
 from collections import OrderedDict
 
 HANGUL_RE = re.compile(r"[\uac00-\ud7a3\u3131-\u318e]")
 LATIN_WORD_RE = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
+# Tiny leftover Latin fragments that must never be phonetic-Hangulized into junk (e.g. "i"+"ts" -> i트스).
+TINY_LATIN_RE = re.compile(r"(?<![A-Za-z])([A-Za-z]{1,2})(?![A-Za-z])")
+
+# Short phrases go glossary -> offline -> (online only if long enough). Online alone stays online-first.
+SHORT_WORD_LIMIT = 3          # 1–3 words: treat as short
+SHORT_CHAR_LIMIT = 24         # or very short character count
+ONLINE_MIN_WORDS = 4          # Auto: need this many words (or a sentence end) before trying online
+ONLINE_MIN_CHARS = 28
 
 
 def res(*p):
@@ -25,6 +35,239 @@ def _ssl_ctx():
         return ssl.create_default_context(cafile=certifi.where())
     except Exception:
         return ssl.create_default_context()
+
+
+# ---------------------------------------------------------------- short-phrase glossary (checked BEFORE any MT / phonetic)
+# Keys are lowercased, apostrophes kept. Multi-word phrases listed as whole entries.
+GLOSSARY = {
+    # greetings / politeness
+    "hi": "안녕",
+    "hello": "안녕하세요",
+    "hey": "야",
+    "bye": "안녕",
+    "goodbye": "안녕히 가세요",
+    "good bye": "안녕히 가세요",
+    "thanks": "고마워",
+    "thank you": "고마워요",
+    "thank you!": "고마워요!",
+    "thx": "고마워",
+    "sorry": "미안",
+    "i'm sorry": "미안해요",
+    "im sorry": "미안해요",
+    "please": "부탁해요",
+    "yes": "네",
+    "yeah": "응",
+    "yep": "응",
+    "no": "아니요",
+    "nope": "아니",
+    "ok": "괜찮아",
+    "okay": "괜찮아",
+    "okey": "괜찮아",
+    "good morning": "좋은 아침",
+    "good night": "잘 자",
+    "good evening": "좋은 저녁",
+    "how are you": "어떻게 지내?",
+    "how's it going": "잘 지내?",
+    "nice to meet you": "만나서 반가워",
+    # contractions (never emit Latin leftovers like i트스)
+    "it's": "그건",
+    "it is": "그것은",
+    "i'm": "나는",
+    "i am": "나는",
+    "don't": "하지 마",
+    "do not": "하지 마",
+    "can't": "못해",
+    "cannot": "못해",
+    "that's": "그건",
+    "that is": "그것은",
+    "there's": "있어",
+    "there is": "있어",
+    "i'll": "내가 할게",
+    "i will": "내가 할게",
+    "we'll": "우리가 할게",
+    "we will": "우리가 할게",
+    "you're": "너는",
+    "you are": "너는",
+    "we're": "우리는",
+    "we are": "우리는",
+    "he's": "그는",
+    "he is": "그는",
+    "she's": "그녀는",
+    "she is": "그녀는",
+    "isn't": "아니야",
+    "aren't": "아니야",
+    "wasn't": "아니었어",
+    "weren't": "아니었어",
+    "won't": "안 할게",
+    "wouldn't": "안 할 거야",
+    "couldn't": "못했어",
+    "shouldn't": "하면 안 돼",
+    "didn't": "안 했어",
+    "doesn't": "안 해",
+    "haven't": "안 했어",
+    "hasn't": "안 했어",
+    "hadn't": "안 했었어",
+    "let's": "하자",
+    "who's": "누구야",
+    "what's": "뭐야",
+    "where's": "어디야",
+    "when's": "언제야",
+    "why's": "왜야",
+    "how's": "어때",
+    # clothing / nouns MT often mangles when alone
+    "hood": "후드",
+    "hoodie": "후드티",
+    "hoodies": "후드티",
+    "hat": "모자",
+    "cap": "모자",
+    "shirt": "셔츠",
+    "t-shirt": "티셔츠",
+    "tshirt": "티셔츠",
+    "jacket": "자켓",
+    "coat": "코트",
+    "pants": "바지",
+    "shoes": "신발",
+    "socks": "양말",
+    "dress": "드레스",
+    "skirt": "치마",
+    "sweater": "스웨터",
+    "jeans": "청바지",
+    # common tiny words that go weird alone
+    "bear": "곰",
+    "i": "나",
+    "you": "너",
+    "me": "나",
+    "we": "우리",
+    "they": "그들",
+    "he": "그",
+    "she": "그녀",
+    "it": "그것",
+    "the": "그",
+    "a": "하나의",
+    "an": "하나의",
+    "and": "그리고",
+    "or": "또는",
+    "but": "하지만",
+    "so": "그래서",
+    "if": "만약",
+    "this": "이것",
+    "that": "저것",
+    "here": "여기",
+    "there": "거기",
+    "now": "지금",
+    "today": "오늘",
+    "tomorrow": "내일",
+    "yesterday": "어제",
+    "love": "사랑",
+    "like": "좋아해",
+    "want": "원해",
+    "need": "필요해",
+    "help": "도와줘",
+    "stop": "멈춰",
+    "go": "가",
+    "come": "와",
+    "wait": "기다려",
+    "good": "좋아",
+    "bad": "나빠",
+    "great": "대단해",
+    "cool": "멋져",
+    "wow": "와",
+    "yes please": "네, 부탁해요",
+    "no thanks": "아니, 괜찮아",
+    "excuse me": "실례합니다",
+    "of course": "물론이지",
+    "all right": "좋아",
+    "alright": "좋아",
+}
+
+# Known English tokens: never phonetic-Hangulize these leftovers; map via glossary or leave for re-translate.
+COMMON_ENGLISH = set(GLOSSARY.keys()) | {
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "will", "would", "could", "should", "may", "might", "must", "shall", "can", "to", "of", "in",
+    "on", "at", "for", "with", "from", "by", "as", "into", "about", "up", "out", "just", "not",
+    "my", "your", "his", "her", "our", "their", "its", "mine", "yours", "ours", "theirs",
+    "what", "who", "where", "when", "why", "how", "which", "whom", "whose",
+    "all", "any", "some", "many", "much", "more", "most", "other", "another", "each", "every",
+    "very", "really", "too", "also", "only", "even", "still", "already", "again", "always", "never",
+    "thing", "things", "time", "day", "way", "man", "woman", "people", "person", "friend", "name",
+    "game", "play", "make", "made", "get", "got", "see", "saw", "know", "think", "say", "said",
+    "look", "take", "give", "find", "tell", "ask", "work", "call", "try", "use", "feel", "leave",
+    "put", "keep", "let", "begin", "seem", "help", "show", "hear", "run", "move", "live", "believe",
+    "hold", "bring", "happen", "write", "provide", "sit", "stand", "lose", "pay", "meet", "include",
+    "continue", "set", "learn", "change", "lead", "understand", "watch", "follow", "stop", "create",
+    "speak", "read", "allow", "add", "spend", "grow", "open", "walk", "win", "offer", "remember",
+    "love", "consider", "appear", "buy", "wait", "serve", "die", "send", "expect", "build", "stay",
+    "fall", "cut", "reach", "kill", "remain", "suggest", "raise", "pass", "sell", "require", "report",
+    "decide", "pull", "ts", "st", "th", "ll", "re", "ve", "nt", "s", "t", "d", "m",
+}
+
+
+def normalize_key(text):
+    """Lowercase + collapse spaces; keep apostrophes for contraction keys."""
+    s = text.strip().lower()
+    s = re.sub(r"\s+", " ", s)
+    s = s.strip(" \t\r\n\"“”‘’")
+    # drop a single trailing . ! ? for glossary lookup (keep internal punctuation)
+    if len(s) > 1 and s[-1] in ".!?":
+        s = s[:-1].rstrip()
+    return s
+
+
+def glossary_lookup(text):
+    """Exact short-phrase hit, or None."""
+    key = normalize_key(text)
+    if not key:
+        return None
+    hit = GLOSSARY.get(key)
+    if hit is not None:
+        return hit
+    # bare punctuation variants already stripped; try without trailing comma
+    if key.endswith(","):
+        return GLOSSARY.get(key[:-1].rstrip())
+    return None
+
+
+def word_count(text):
+    return len(re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", text))
+
+
+def is_short_input(text):
+    src = text.strip()
+    if not src:
+        return True
+    wc = word_count(src)
+    return wc <= SHORT_WORD_LIMIT or len(src) <= SHORT_CHAR_LIMIT
+
+
+def looks_like_sentence(text):
+    """Long enough / has sentence end — safe to try context-free online MT."""
+    src = text.strip()
+    if re.search(r"[.!?](?:\s|$)", src):
+        return word_count(src) >= 2 or len(src) >= 12
+    return word_count(src) >= ONLINE_MIN_WORDS or len(src) >= ONLINE_MIN_CHARS
+
+
+def expand_contractions_for_mt(text):
+    """Expand common contractions before neural MT so leftovers never stay as it's/I'm fragments."""
+    mapping = [
+        (r"\bwon't\b", "will not"), (r"\bcan't\b", "cannot"), (r"\bshan't\b", "shall not"),
+        (r"\bI'm\b", "I am"), (r"\bI've\b", "I have"), (r"\bI'd\b", "I would"), (r"\bI'll\b", "I will"),
+        (r"\byou're\b", "you are"), (r"\byou've\b", "you have"), (r"\byou'd\b", "you would"), (r"\byou'll\b", "you will"),
+        (r"\bhe's\b", "he is"), (r"\bshe's\b", "she is"), (r"\bit's\b", "it is"),
+        (r"\bwe're\b", "we are"), (r"\bwe've\b", "we have"), (r"\bwe'd\b", "we would"), (r"\bwe'll\b", "we will"),
+        (r"\bthey're\b", "they are"), (r"\bthey've\b", "they have"), (r"\bthey'd\b", "they would"), (r"\bthey'll\b", "they will"),
+        (r"\bthat's\b", "that is"), (r"\bthere's\b", "there is"), (r"\bwhat's\b", "what is"),
+        (r"\bwho's\b", "who is"), (r"\bwhere's\b", "where is"), (r"\bhow's\b", "how is"),
+        (r"\bisn't\b", "is not"), (r"\baren't\b", "are not"), (r"\bwasn't\b", "was not"), (r"\bweren't\b", "were not"),
+        (r"\bdon't\b", "do not"), (r"\bdoesn't\b", "does not"), (r"\bdidn't\b", "did not"),
+        (r"\bhaven't\b", "have not"), (r"\bhasn't\b", "has not"), (r"\bhadn't\b", "had not"),
+        (r"\bwouldn't\b", "would not"), (r"\bcouldn't\b", "could not"), (r"\bshouldn't\b", "should not"),
+        (r"\blet's\b", "let us"),
+    ]
+    out = text
+    for pat, repl in mapping:
+        out = re.sub(pat, repl, out, flags=re.IGNORECASE)
+    return out
 
 
 # ---------------------------------------------------------------- English sound -> Hangul (for names the model leaves in Latin)
@@ -117,9 +360,30 @@ def hangulize_word(word):
     return s or word
 
 
+def _replace_latin_token(m):
+    """Translate known English leftovers via glossary; phonetic only for name-like tokens."""
+    tok = m.group(0)
+    low = tok.lower()
+    if low in GLOSSARY:
+        return GLOSSARY[low]
+    if low in COMMON_ENGLISH or len(low) <= 2:
+        # Tiny / common English fragment: drop phonetic junk; keep empty (Hangul around it is enough)
+        # Prefer glossary again after stripping trailing 's
+        base = low[:-2] if low.endswith("'s") else low
+        if base in GLOSSARY:
+            return GLOSSARY[base]
+        return ""  # never emit i트스 / 트스 leftovers
+    # Name-like (capitalized or unknown longer token): phonetic Hangulization
+    return hangulize_word(tok)
+
+
 def hangulize_leftovers(text):
-    """Turn any English words still in Latin letters into Hangul by sound (Teo -> 테오)."""
-    return LATIN_WORD_RE.sub(lambda m: hangulize_word(m.group(0)), text)
+    """Turn leftover Latin into Hangul. Common English/contractions use glossary; names use sound (Teo -> 테오)."""
+    out = LATIN_WORD_RE.sub(_replace_latin_token, text)
+    # Collapse spaces left by dropped tiny fragments
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r" +([,.!?])", r"\1", out)
+    return out.strip() if out.strip() else text
 
 
 # ---------------------------------------------------------------- engines
@@ -162,7 +426,7 @@ class OfflineEngine:
 
 class OnlineEngine:
     name = "Online"
-    UA = "HANGUL WOOD/1.0 (EX Inc.)"
+    UA = "HANGUL WOOD/1.0.1 (EX Inc.)"
 
     def __init__(self):
         self.ctx = _ssl_ctx()
@@ -207,7 +471,8 @@ def split_sentences(text):
 
 
 class Translator:
-    """Mode: 'auto' (online first, built-in backup), 'offline', 'online'. Thread-safe, cached."""
+    """Mode: 'auto' (online first for long text, built-in backup; short = glossary/offline),
+    'offline', 'online'. Thread-safe, cached."""
 
     def __init__(self, mode="auto", hangulize=True):
         self.mode, self.hangulize = mode, hangulize
@@ -227,23 +492,85 @@ class Translator:
             if key in self.cache:
                 self.cache.move_to_end(key)
                 return self.cache[key], self.last_engine or "cache"
+
+        # 1) Glossary first — short words/phrases never hit context-free online MT
+        gloss = glossary_lookup(src)
+        if gloss is not None:
+            self.last_engine = "Glossary"
+            with self._clock:
+                self.cache[key] = gloss
+                while len(self.cache) > 800:
+                    self.cache.popitem(last=False)
+            return gloss, self.last_engine
+
+        # For short multi-token phrases: try glossary-token join when every token is known
+        if is_short_input(src):
+            toks = LATIN_WORD_RE.findall(src)
+            if toks and all(t.lower() in GLOSSARY for t in toks):
+                joined = " ".join(GLOSSARY[t.lower()] for t in toks)
+                self.last_engine = "Glossary"
+                with self._clock:
+                    self.cache[key] = joined
+                    while len(self.cache) > 800:
+                        self.cache.popitem(last=False)
+                return joined, self.last_engine
+
+        mt_src = expand_contractions_for_mt(src)
         out, eng, err = None, "", None
-        if self.mode in ("auto", "online") and (self.mode == "online" or time.time() >= self._online_down_until):
+        short = is_short_input(src)
+        allow_online = (
+            self.mode == "online"
+            or (self.mode == "auto" and looks_like_sentence(src) and time.time() >= self._online_down_until)
+        )
+
+        # 2) Short Auto path: offline first (never invent meanings via online on tiny input)
+        if short and self.mode in ("auto", "offline"):
             try:
-                out, eng = self.online.translate(src), self.online.name
+                out, eng = self.offline.translate(mt_src), self.offline.name
             except Exception as e:
                 err = e
-                self._online_down_until = time.time() + 60          # don't stall typing on a dead network
-        if out is None and self.mode in ("auto", "offline"):
-            try:
-                out, eng = self.offline.translate(src), self.offline.name
-            except Exception as e:
-                err = e
+            if out is None and self.mode == "auto" and allow_online:
+                try:
+                    out, eng = self.online.translate(mt_src), self.online.name
+                except Exception as e:
+                    err = e
+                    self._online_down_until = time.time() + 60
+        else:
+            # Longer text / Online-only: keep previous Auto order (online then offline)
+            if allow_online or self.mode == "online":
+                if self.mode == "online" or time.time() >= self._online_down_until:
+                    try:
+                        out, eng = self.online.translate(mt_src), self.online.name
+                    except Exception as e:
+                        err = e
+                        self._online_down_until = time.time() + 60
+            if out is None and self.mode in ("auto", "offline"):
+                try:
+                    out, eng = self.offline.translate(mt_src), self.offline.name
+                except Exception as e:
+                    err = e
+
+        # 3) Last resort for a single unknown short token: phonetic name Hangulization
+        if out is None and short and self.hangulize and word_count(src) == 1:
+            tok = LATIN_WORD_RE.findall(src)
+            if tok and tok[0].lower() not in COMMON_ENGLISH:
+                out, eng = hangulize_word(tok[0]), "Phonetic"
+            elif tok and tok[0].lower() in GLOSSARY:
+                out, eng = GLOSSARY[tok[0].lower()], "Glossary"
+
         if out is None:
             raise RuntimeError(str(err) if err else "no engine")
         out = out.strip()
         if self.hangulize:
             out = hangulize_leftovers(out)
+        # Guard: never leave tiny Latin fragments next to Hangul (the old i트스 bug)
+        if HANGUL_RE.search(out):
+            out = TINY_LATIN_RE.sub(
+                lambda m: GLOSSARY.get(m.group(1).lower(), "") if m.group(1).lower() in COMMON_ENGLISH or len(m.group(1)) <= 2
+                else hangulize_word(m.group(1)),
+                out,
+            )
+            out = re.sub(r"[ \t]{2,}", " ", out).strip()
         self.last_engine = eng
         with self._clock:
             self.cache[key] = out
