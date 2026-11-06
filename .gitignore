@@ -1,0 +1,9 @@
+build/
+dist/
+__pycache__/
+*.log
+model/en_ko/model.bin
+model/en_ko/shared_vocabulary.txt
+model/en_ko/sentencepiece.model
+dl/
+shots_raw/
