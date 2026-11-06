@@ -1,13 +1,13 @@
 {
-  "version": "1.0.0",
-  "url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-Setup-1.0.0.exe",
-  "installer_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-Setup-1.0.0.exe",
-  "full_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-1.0.0-Windows-x64.zip",
-  "portable_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-1.0.0-Windows-x64.zip",
-  "release_url": "https://github.com/Teobokki/hangul-wood/releases/tag/v1.0.0",
-  "sha256": "20e24092ce52a11b51ea2184132e6235d121290286a6a86c097b25449f5ee6b9",
-  "installer_sha256": "20e24092ce52a11b51ea2184132e6235d121290286a6a86c097b25449f5ee6b9",
-  "full_sha256": "6070b8cbec60e03157db5429e9155591777fe36ca74ace5079d023acc2ea0964",
-  "portable_sha256": "6070b8cbec60e03157db5429e9155591777fe36ca74ace5079d023acc2ea0964",
-  "notes": "HANGUL WOOD 1.0.0 \u2014 type English, get Hangul in a document editor."
+  "version": "1.0.1",
+  "url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.1/HANGUL-WOOD-Setup-1.0.1.exe",
+  "installer_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.1/HANGUL-WOOD-Setup-1.0.1.exe",
+  "full_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.1/HANGUL-WOOD-1.0.1-Windows-x64.zip",
+  "portable_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.1/HANGUL-WOOD-1.0.1-Windows-x64.zip",
+  "release_url": "https://github.com/Teobokki/hangul-wood/releases/tag/v1.0.1",
+  "sha256": "4bd90068b35e77236c7c3658c058fadbbd81d8bfe85383dc2dff5d31f9bf964c",
+  "installer_sha256": "4bd90068b35e77236c7c3658c058fadbbd81d8bfe85383dc2dff5d31f9bf964c",
+  "full_sha256": "f719bc98b46b58122739af31c5ff68f261d20dae490ad9f4ecd35c48120ace5a",
+  "portable_sha256": "f719bc98b46b58122739af31c5ff68f261d20dae490ad9f4ecd35c48120ace5a",
+  "notes": "HANGUL WOOD 1.0.1 — short phrases use a glossary first so tiny English no longer invents weird Hangul."
 }
