@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-Setup-1.0.0.exe",
+  "installer_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-Setup-1.0.0.exe",
+  "full_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-1.0.0-Windows-x64.zip",
+  "portable_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.0/HANGUL-WOOD-1.0.0-Windows-x64.zip",
+  "release_url": "https://github.com/Teobokki/hangul-wood/releases/tag/v1.0.0",
+  "sha256": "20e24092ce52a11b51ea2184132e6235d121290286a6a86c097b25449f5ee6b9",
+  "installer_sha256": "20e24092ce52a11b51ea2184132e6235d121290286a6a86c097b25449f5ee6b9",
+  "full_sha256": "6070b8cbec60e03157db5429e9155591777fe36ca74ace5079d023acc2ea0964",
+  "portable_sha256": "6070b8cbec60e03157db5429e9155591777fe36ca74ace5079d023acc2ea0964",
+  "notes": "HANGUL WOOD 1.0.0 \u2014 type English, get Hangul in a document editor."
+}
