@@ -1,7 +1,7 @@
 """HANGUL WOOD translation engine: English in, Hangul out.
 Offline: built-in English->Korean neural model (CTranslate2 + SentencePiece), always available.
 Online (optional, Auto mode): HTTPS translation for higher quality; falls back to the built-in model on any failure.
-Short phrases: built-in glossary first, then offline model; online MT only for longer / sentence-like input
+Whole text is translated exactly as typed (online first in Auto), built-in model as offline backup
 (so tiny ambiguous queries never hallucinate unrelated meanings).
 ©2026 EX Inc./HYPERION DIGITAL ©2026"""
 import json, os, re, ssl, sys, threading, time, urllib.parse, urllib.request
@@ -426,7 +426,7 @@ class OfflineEngine:
 
 class OnlineEngine:
     name = "Online"
-    UA = "HANGUL WOOD/1.0.1 (EX Inc.)"
+    UA = "HANGUL WOOD/1.0.2 (EX Inc.)"
 
     def __init__(self):
         self.ctx = _ssl_ctx()
@@ -503,52 +503,24 @@ class Translator:
                     self.cache.popitem(last=False)
             return gloss, self.last_engine
 
-        # For short multi-token phrases: try glossary-token join when every token is known
-        if is_short_input(src):
-            toks = LATIN_WORD_RE.findall(src)
-            if toks and all(t.lower() in GLOSSARY for t in toks):
-                joined = " ".join(GLOSSARY[t.lower()] for t in toks)
-                self.last_engine = "Glossary"
-                with self._clock:
-                    self.cache[key] = joined
-                    while len(self.cache) > 800:
-                        self.cache.popitem(last=False)
-                return joined, self.last_engine
-
-        mt_src = expand_contractions_for_mt(src)
+        # 2) Exact translation of the whole text as typed.
+        #    Auto / Online: full-text online translation first (keeps every word and its context),
+        #    built-in model only as the offline backup. No word-by-word glossary joins.
         out, eng, err = None, "", None
         short = is_short_input(src)
-        allow_online = (
-            self.mode == "online"
-            or (self.mode == "auto" and looks_like_sentence(src) and time.time() >= self._online_down_until)
-        )
-
-        # 2) Short Auto path: offline first (never invent meanings via online on tiny input)
-        if short and self.mode in ("auto", "offline"):
+        online_ok = self.mode == "online" or (self.mode == "auto" and time.time() >= self._online_down_until)
+        if online_ok:
             try:
-                out, eng = self.offline.translate(mt_src), self.offline.name
+                out, eng = self.online.translate(src), self.online.name
             except Exception as e:
                 err = e
-            if out is None and self.mode == "auto" and allow_online:
-                try:
-                    out, eng = self.online.translate(mt_src), self.online.name
-                except Exception as e:
-                    err = e
-                    self._online_down_until = time.time() + 60
-        else:
-            # Longer text / Online-only: keep previous Auto order (online then offline)
-            if allow_online or self.mode == "online":
-                if self.mode == "online" or time.time() >= self._online_down_until:
-                    try:
-                        out, eng = self.online.translate(mt_src), self.online.name
-                    except Exception as e:
-                        err = e
-                        self._online_down_until = time.time() + 60
-            if out is None and self.mode in ("auto", "offline"):
-                try:
-                    out, eng = self.offline.translate(mt_src), self.offline.name
-                except Exception as e:
-                    err = e
+                if self.mode == "auto":
+                    self._online_down_until = time.time() + 30
+        if out is None and self.mode in ("auto", "offline"):
+            try:
+                out, eng = self.offline.translate(expand_contractions_for_mt(src)), self.offline.name
+            except Exception as e:
+                err = e
 
         # 3) Last resort for a single unknown short token: phonetic name Hangulization
         if out is None and short and self.hangulize and word_count(src) == 1:

@@ -4,7 +4,7 @@ import json, os, queue, re, sys, textwrap, threading
 from datetime import date
 
 APP_NAME = "HANGUL WOOD"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 COPYRIGHT = "\u00a92026 EX Inc./HYPERION DIGITAL \u00a92026"
 
 if os.name == "nt":
@@ -199,7 +199,10 @@ class Main(QMainWindow):
         self.worker.done.connect(self.on_done); self.worker.failed.connect(self.on_failed); self.worker.ready.connect(self.on_ready)
         self.setWindowIcon(QIcon(res("assets", "logo.ico")))
         self.resize(1360, 900)
-        self.idle = QTimer(self, singleShot=True, interval=1800, timeout=lambda: self.convert_pending(False))
+        # pause: finished sentences right away; an unfinished line only after a long pause,
+        # so a sentence is never translated in pieces (pieces lose meaning)
+        self.idle = QTimer(self, singleShot=True, interval=1800, timeout=lambda: (self.convert_pending(True), self.idle_long.start()))
+        self.idle_long = QTimer(self, singleShot=True, interval=4500, timeout=lambda: self.convert_pending(False))
         self.soon = QTimer(self, singleShot=True, interval=250, timeout=lambda: self.convert_pending(True))
         self.hl = QTimer(self, singleShot=True, interval=120, timeout=self.highlight_pending)
         self.build()
@@ -596,6 +599,7 @@ class Main(QMainWindow):
         if self.applying:
             return
         self.hl.start()
+        self.idle_long.stop()          # still typing: keep the unfinished sentence whole
         if not self.live or added <= 0:
             return
         last = self.page.document().characterAt(pos + added - 1)
