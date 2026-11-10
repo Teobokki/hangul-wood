@@ -1,13 +1,13 @@
 {
-  "version": "1.0.2",
-  "url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.2/HANGUL-WOOD-Setup-1.0.2.exe",
-  "installer_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.2/HANGUL-WOOD-Setup-1.0.2.exe",
-  "full_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.2/HANGUL-WOOD-1.0.2-Windows-x64.zip",
-  "portable_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.2/HANGUL-WOOD-1.0.2-Windows-x64.zip",
-  "release_url": "https://github.com/Teobokki/hangul-wood/releases/tag/v1.0.2",
-  "sha256": "cd55ed3790cd8fd8e2da7ff7ab49b4b0e5418e09b296b405d5a66279ed06cf89",
-  "installer_sha256": "cd55ed3790cd8fd8e2da7ff7ab49b4b0e5418e09b296b405d5a66279ed06cf89",
-  "full_sha256": "7a0802f701034b6a078c1e64bf1f063418dc930c14d29c7113a292dbffc9e640",
-  "portable_sha256": "7a0802f701034b6a078c1e64bf1f063418dc930c14d29c7113a292dbffc9e640",
-  "notes": "HANGUL WOOD 1.0.2 — translates exactly what you type: whole sentences, no word-by-word guesses or half-sentence pieces."
+  "version": "1.0.3",
+  "url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.3/HANGUL-WOOD-Setup-1.0.3.exe",
+  "installer_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.3/HANGUL-WOOD-Setup-1.0.3.exe",
+  "full_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.3/HANGUL-WOOD-1.0.3-Windows-x64.zip",
+  "portable_url": "https://github.com/Teobokki/hangul-wood/releases/download/v1.0.3/HANGUL-WOOD-1.0.3-Windows-x64.zip",
+  "release_url": "https://github.com/Teobokki/hangul-wood/releases/tag/v1.0.3",
+  "sha256": "75a8037521fab376f15717513bd37f0aba172ee2b376738bce8b9182d117e3dd",
+  "installer_sha256": "75a8037521fab376f15717513bd37f0aba172ee2b376738bce8b9182d117e3dd",
+  "full_sha256": "7d5f495494d647af9df55840e5b6488363ad8cf9769c8583349c7b393cf8eb9d",
+  "portable_sha256": "7d5f495494d647af9df55840e5b6488363ad8cf9769c8583349c7b393cf8eb9d",
+  "notes": "HANGUL WOOD 1.0.3 — no more junk words (handsome is 잘생긴 now); bigger built-in word list."
 }
