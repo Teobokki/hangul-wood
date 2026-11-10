@@ -180,6 +180,10 @@ GLOSSARY = {
     "alright": "좋아",
 }
 
+# Common single words / phrases (exact whole-input hits only, so online context is never overridden)
+for _k, _v in {'handsome': '잘생긴', 'beautiful': '아름다운', 'pretty': '예쁜', 'cute': '귀여운', 'ugly': '못생긴', 'nice': '좋은', 'kind': '친절한', 'smart': '똑똑한', 'stupid': '멍청한', 'funny': '웃긴', 'happy': '행복한', 'sad': '슬픈', 'angry': '화난', 'tired': '피곤한', 'hungry': '배고픈', 'thirsty': '목마른', 'sleepy': '졸린', 'scared': '무서운', 'afraid': '두려운', 'excited': '신난', 'bored': '지루한', 'strong': '강한', 'weak': '약한', 'fast': '빠른', 'slow': '느린', 'big': '큰', 'small': '작은', 'little': '작은', 'tall': '키가 큰', 'short': '짧은', 'long': '긴', 'hot': '뜨거운', 'cold': '차가운', 'warm': '따뜻한', 'new': '새로운', 'old': '오래된', 'young': '젊은', 'rich': '부자인', 'poor': '가난한', 'easy': '쉬운', 'hard': '어려운', 'difficult': '어려운', 'heavy': '무거운', 'light': '가벼운', 'dark': '어두운', 'bright': '밝은', 'clean': '깨끗한', 'dirty': '더러운', 'quiet': '조용한', 'loud': '시끄러운', 'busy': '바쁜', 'free': '자유로운', 'expensive': '비싼', 'cheap': '싼', 'delicious': '맛있는', 'tasty': '맛있는', 'awesome': '멋진', 'amazing': '놀라운', 'perfect': '완벽한', 'gorgeous': '아주 아름다운', 'lovely': '사랑스러운', 'sweet': '달콤한', 'brave': '용감한', 'lazy': '게으른', 'rude': '무례한', 'polite': '공손한', 'shy': '수줍은', 'famous': '유명한', 'important': '중요한', 'special': '특별한', 'sick': '아픈', 'healthy': '건강한', 'fat': '뚱뚱한', 'thin': '마른', 'wet': '젖은', 'dry': '마른', 'full': '배부른', 'empty': '빈', 'right': '맞아', 'wrong': '틀린', 'true': '사실인', 'fake': '가짜', 'real': '진짜', 'best': '최고의', 'worst': '최악의', 'better': '더 좋은', 'fine': '괜찮아', 'red': '빨간색', 'blue': '파란색', 'green': '초록색', 'yellow': '노란색', 'black': '검은색', 'white': '흰색', 'pink': '분홍색', 'purple': '보라색', 'orange': '주황색', 'brown': '갈색', 'gray': '회색', 'grey': '회색', 'gold': '금색', 'silver': '은색', 'man': '남자', 'woman': '여자', 'boy': '소년', 'girl': '소녀', 'friend': '친구', 'friends': '친구들', 'family': '가족', 'mom': '엄마', 'mother': '어머니', 'dad': '아빠', 'father': '아버지', 'brother': '형제', 'sister': '자매', 'baby': '아기', 'child': '아이', 'kids': '아이들', 'teacher': '선생님', 'student': '학생', 'doctor': '의사', 'boyfriend': '남자친구', 'girlfriend': '여자친구', 'people': '사람들', 'person': '사람', 'king': '왕', 'queen': '여왕', 'boss': '사장님', 'dog': '개', 'cat': '고양이', 'bird': '새', 'fish': '물고기', 'horse': '말', 'rabbit': '토끼', 'tiger': '호랑이', 'lion': '사자', 'monkey': '원숭이', 'pig': '돼지', 'cow': '소', 'chicken': '닭', 'mouse': '쥐', 'snake': '뱀', 'duck': '오리', 'dragon': '용', 'puppy': '강아지', 'kitten': '새끼 고양이', 'house': '집', 'home': '집', 'school': '학교', 'car': '자동차', 'phone': '휴대폰', 'computer': '컴퓨터', 'book': '책', 'water': '물', 'food': '음식', 'rice': '밥', 'bread': '빵', 'coffee': '커피', 'tea': '차', 'milk': '우유', 'money': '돈', 'time': '시간', 'day': '날', 'night': '밤', 'morning': '아침', 'evening': '저녁', 'week': '주', 'year': '년', 'city': '도시', 'country': '나라', 'world': '세계', 'room': '방', 'door': '문', 'window': '창문', 'table': '탁자', 'chair': '의자', 'bed': '침대', 'bag': '가방', 'game': '게임', 'music': '음악', 'movie': '영화', 'song': '노래', 'store': '가게', 'shop': '가게', 'hospital': '병원', 'restaurant': '식당', 'bathroom': '화장실', 'toilet': '화장실', 'sun': '해', 'moon': '달', 'star': '별', 'sky': '하늘', 'rain': '비', 'snow': '눈', 'tree': '나무', 'flower': '꽃', 'sea': '바다', 'river': '강', 'mountain': '산', 'love you': '사랑해', 'heart': '마음', 'dream': '꿈', 'name': '이름', 'word': '단어', 'work': '일', 'job': '직업', 'party': '파티', 'birthday': '생일', 'gift': '선물', 'present': '선물', 'apple': '사과', 'banana': '바나나', 'pizza': '피자', 'cake': '케이크', 'eat': '먹다', 'drink': '마시다', 'sleep': '자다', 'run': '달리다', 'walk': '걷다', 'play': '놀다', 'read': '읽다', 'write': '쓰다', 'sing': '노래하다', 'dance': '춤추다', 'cry': '울다', 'laugh': '웃다', 'smile': '미소', 'talk': '말하다', 'speak': '말하다', 'listen': '듣다', 'look': '보다', 'see': '보다', 'watch': '보다', 'think': '생각하다', 'know': '알다', 'learn': '배우다', 'study': '공부하다', 'buy': '사다', 'sell': '팔다', 'give': '주다', 'take': '가지다', 'make': '만들다', 'open': '열다', 'close': '닫다', 'start': '시작하다', 'finish': '끝내다', 'win': '이기다', 'lose': '지다', 'fight': '싸우다', 'kiss': '키스', 'hug': '포옹', 'sit': '앉다', 'stand': '서다', 'swim': '수영하다', 'drive': '운전하다', 'fly': '날다', 'cook': '요리하다', 'miss you': '보고 싶어', 'i love you': '사랑해', 'i miss you': '보고 싶어', 'maybe': '아마', 'always': '항상', 'never': '절대', 'sometimes': '가끔', 'very': '매우', 'really': '정말', 'too': '너무', 'again': '다시', 'together': '함께', 'alone': '혼자', 'everyone': '모두', 'everything': '모든 것', 'nothing': '아무것도', 'something': '뭔가', 'why': '왜', 'what': '뭐', 'who': '누구', 'where': '어디', 'when': '언제', 'how': '어떻게', 'welcome': '환영합니다', 'congratulations': '축하해요', 'happy birthday': '생일 축하해', 'good luck': '행운을 빌어', 'see you': '또 봐', 'see you later': '나중에 봐', 'good job': '잘했어', "i don't know": '모르겠어', 'i know': '알아', "what's up": '무슨 일이야', "you're welcome": '천만에요', 'me too': '나도'}.items():
+    GLOSSARY.setdefault(_k, _v)
+
 # Known English tokens: never phonetic-Hangulize these leftovers; map via glossary or leave for re-translate.
 COMMON_ENGLISH = set(GLOSSARY.keys()) | {
     "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
@@ -426,7 +430,7 @@ class OfflineEngine:
 
 class OnlineEngine:
     name = "Online"
-    UA = "HANGUL WOOD/1.0.2 (EX Inc.)"
+    UA = "HANGUL WOOD/1.0.3 (EX Inc.)"
 
     def __init__(self):
         self.ctx = _ssl_ctx()
@@ -439,6 +443,7 @@ class OnlineEngine:
     def translate(self, text):
         q = urllib.parse.quote(text)
         errs = []
+        # Machine translation only. (Crowd-sourced memories gave junk like handsome -> 코메데로.)
         try:
             data = json.loads(self._get("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=" + q))
             out = "".join(part[0] for part in data[0] if part and part[0])
@@ -448,9 +453,11 @@ class OnlineEngine:
         except Exception as e:
             errs.append(type(e).__name__)
         try:
-            data = json.loads(self._get("https://api.mymemory.translated.net/get?langpair=en%7Cko&q=" + q))
-            out = (data.get("responseData") or {}).get("translatedText") or ""
-            if HANGUL_RE.search(out) and "MYMEMORY WARNING" not in out.upper():
+            data = json.loads(self._get("https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=ko&q=" + q))
+            out = data[0] if isinstance(data, list) and data else ""
+            if isinstance(out, list):
+                out = out[0] if out else ""
+            if isinstance(out, str) and HANGUL_RE.search(out):
                 return out
             errs.append("no Hangul in reply")
         except Exception as e:

@@ -4,7 +4,7 @@ import json, os, queue, re, sys, textwrap, threading
 from datetime import date
 
 APP_NAME = "HANGUL WOOD"
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.0.3"
 COPYRIGHT = "\u00a92026 EX Inc./HYPERION DIGITAL \u00a92026"
 
 if os.name == "nt":
